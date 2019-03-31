@@ -56,8 +56,8 @@ public class BasePage {
         return driver.findElement(elementBy).getText();
     }
     
-  //Read Text
-    public int sizeElement (By elementBy) {
+    //Read Text
+    public int sizeElements (By elementBy) {
         return driver.findElements(elementBy).size();        
     }
  

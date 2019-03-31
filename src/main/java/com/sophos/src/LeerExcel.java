@@ -20,47 +20,57 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import utilities.BasePage;
+
 public class LeerExcel {
 	
 	private FileInputStream inputStream;
 	private Workbook workbook;
 	private FileOutputStream outputStream;
 	private WebDriver driver;
+	private BasePage basePage;
+
+	private String filePath = "C:\\SELENIUM\\Prueba.xlsx";
+	private String webPage =  "http:\\www.google.com.co";
+	private By inputSearch = By.xpath("//input[@title='Buscar']");
+	private By searchResult = By.id("search");
+	private By searchResultsDiv = By.xpath("//p[@aria-level='3']");
 	
 	public LeerExcel(WebDriver driver) {
 		this.driver = driver;
+		basePage = new BasePage(driver);
 	}
 	
 	public void search() {
 		try {
-			inputStream = new FileInputStream(new File ("C:\\SELENIUM\\Prueba.xlsx"));
+			inputStream = new FileInputStream(new File (filePath));
 			workbook =  WorkbookFactory.create(inputStream);
 			Sheet primeraHoja = workbook.getSheetAt(0);
-			Iterator iterador = primeraHoja.iterator();
+			Iterator<?> iterador = primeraHoja.iterator();
 			
 			DataFormatter formatter = new DataFormatter();
 	        while (iterador.hasNext()) {
 	            Row fila = (Row) iterador.next();
-	            //System.out.println("row number : " + fila.getRowNum());
-	            Iterator cellIterator = fila.cellIterator();
+	            
+	            Iterator<Cell> cellIterator = fila.cellIterator();
 	            
 	            if( fila.getRowNum() != 0 ) {
 	            	 while(cellIterator.hasNext()) {
 	                     Cell celda = (Cell) cellIterator.next();
-	                     //System.out.println("column index: " + celda.getColumnIndex());
+	                   
 	                     String contenidoCeldaBusqueda = formatter.formatCellValue(fila.getCell(0));
-	                     //System.out.println("celda: " + contenidoCeldaBusqueda);
-	                     driver.get("http:\\www.google.com.co");
-	             		 driver.findElement(By.name("q")).sendKeys(contenidoCeldaBusqueda);;
-	             		 driver.findElement(By.name("btnK")).submit();
-	             		 WebElement element = (new WebDriverWait(driver, 10))
-	          				  .until(ExpectedConditions.presenceOfElementLocated((By.id("search"))));
+	                   
+	                     driver.get(webPage);
+	                     
+	                     basePage.writeText(inputSearch, contenidoCeldaBusqueda);
+	                     basePage.submit(inputSearch);
+	            
+	             		 WebElement element = basePage.waitPresenceOfElement(searchResult);
 	             		 		
-	             		 //System.out.println("Element size: " + element.getSize());
-	             		 Dimension sizeContenedorResultado =  element.getSize();
-	             		 //System.out.println("Element size Height: " + sizeContenedorResultado.getHeight());
-	             		 Boolean sinResultado = driver.findElements(By.xpath("//p[@aria-level='3']")).size() > 0 ;
-	             		 //System.out.println("Element exist: " + sinResultado);
+	             		
+	             		 Dimension sizeContenedorResultado =  element.getSize();	             		
+	             		 Boolean sinResultado = basePage.sizeElements(searchResultsDiv) > 0 ;
+
 	             		 if(sinResultado && (sizeContenedorResultado.getHeight() == 0)) {
 	             			fila.createCell(1).setCellValue("No");
 	             		 }else {
@@ -71,15 +81,13 @@ public class LeerExcel {
 	                 }
 	            }	
 	        }
-	        outputStream =new FileOutputStream(new File("C:\\SELENIUM\\Prueba.xlsx"));
+	        outputStream =new FileOutputStream(new File(filePath));
 	 		
 				workbook.write(outputStream);
 				
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}
